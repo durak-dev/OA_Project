@@ -136,15 +136,11 @@ class GeneticAlgorithm():
         plt.title('Genetic Algorithm Performance')
         plt.xlabel('Iteration')
         plt.ylabel('Fitness')
-
-        # Hyperparameters
         params = (f"Pop Size: {len(self.population)} | Iterations: {self.n_iter} | "
-                  f"Mutation Rate: {self.mutation_rate} | Tournament Size: {self.tournament_size}")
-
-        # Add text below the plot (0.5, 0.01 are center-bottom coordinates)
-        plt.figtext(0.5, -0.05, params, ha="center", fontsize=10,
-                    bbox={"facecolor": "orange", "alpha": 0.2, "pad": 5})
-        plt.tight_layout()
+                  f"Mutation Factor: {self.mutation_factor}")
+        plt.figtext(0.5, 0.05, params, ha="center", fontsize=10,
+                    bbox={"facecolor": "lightblue", "alpha": 0.2, "pad": 5})
+        plt.savefig('figures/GA_optimization_history.png')
         plt.show()
 
 class DifferentialEvolution():
@@ -210,24 +206,17 @@ class DifferentialEvolution():
         plt.title('Differential Evolution Performance')
         plt.xlabel('Iteration')
         plt.ylabel('Fitness')
-
+        plt.subplots_adjust(bottom=0.2)
         # Hyperparameters
         params = (f"Pop Size: {len(self.population)} | Iterations: {self.n_iter} | "
                   f"Mutation Factor: {self.mutation_factor}")
-
-        # Add text below the plot
-        plt.figtext(0.5, -0.05, params, ha="center", fontsize=10,
+        plt.figtext(0.5, 0.05, params, ha="center", fontsize=10,
                     bbox={"facecolor": "lightblue", "alpha": 0.2, "pad": 5})
-        plt.tight_layout()
+        plt.savefig('figures/DE_optimization_history.png')
         plt.show()
 
 
 
 
 if __name__ == "__main__":
-    x = generate_knapsack()
-    sim = SimulatedAnnealing(generate_knapsack, fitness_function_ks, neighbors_knapsack, alpha = 0.95)
-    hill_climber = HillClimbing(x, neighbors_knapsack,fitness_function_ks)
-    gen_a = GeneticAlgorithm(gen_less_random_ks, fitness_function_ks, tournament_selection,
-                             crossover, mutation, pop_size=1000, n_iter=1000, mutation_rate=0.1)
-    print(gen_a.run())
+    pass

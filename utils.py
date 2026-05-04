@@ -40,10 +40,7 @@ if __name__ == "__main__":
     URL = r"C:\Users\Lucas\Documents\NOVA IMS\2nd Year\Machine Learning\Final Project\ML15-All_Files\Nata_Files\less_features"
     nata_train = pd.read_csv(URL + r'\train_data_lf.csv', index_col=0)
     nata_test = pd.read_csv(URL + r'\test_data_lf.csv', index_col=0)
-    # X = park_data.iloc[:, :-1]
-    # y = park_data.iloc[:, -1]
 
-    # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=42)
 
     X_test = nata_test.drop(columns='target')
     y_test = nata_test.target.map({'OK': 1, 'KO': 0})
@@ -56,7 +53,7 @@ if __name__ == "__main__":
                  'mutation': adaptive_mutation, 'pop_size': 50,
                  'n_iter': 1000, 'mutation_rate': 0.1, 'maximize': False}
 
-    de_params = {'mutation': diff_evol_mutation, 'pop_size': 50,
+    de_params = {'mutation': diff_evol_mutation, 'crossover': binomial_crossover,'pop_size': 50,
                  'n_iter': 1000, 'mutation_factor': 0.9, 'maximize': False}
 
     configs = [

@@ -5,20 +5,12 @@ from algorithm_functions import *
 from algorithms import GeneticAlgorithm, DifferentialEvolution
 
 park_data = pd.read_csv('parkinsons_preprocessed.csv', index_col=0)
-URL = r"C:\Users\Lucas\Documents\NOVA IMS\2nd Year\Machine Learning\Final Project\ML15-All_Files\Nata_Files\less_features"
-nata_train = pd.read_csv(URL+r'\train_data_lf.csv', index_col=0)
-nata_test = pd.read_csv(URL+r'\test_data_lf.csv', index_col=0)
-#X = park_data.iloc[:, :-1]
-#y = park_data.iloc[:, -1]
+
+X = park_data.iloc[:, :-1]
+y = park_data.iloc[:, -1]
 
 
-#X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=42)
-
-X_test = nata_test.drop(columns='target')
-y_test = nata_test.target.map({'OK': 1, 'KO': 0})
-
-X_train = nata_train.drop(columns='target')
-y_train = nata_train.target.map({'OK': 1, 'KO': 0})
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=42)
 
 class OptimizationMLP_Classifier:
     def __init__(self, algorithm_class, hidden_layer_size, weight_init = 'gaussian', error_calc = 'BCE', **algo_params):
@@ -146,13 +138,13 @@ if __name__ == "__main__":
                'maximize': False
                 }
 
-    #GA_opt = OptimizationMLP_Classifier(GeneticAlgorithm, X_train.shape[1], error_calc="BCE" ,**params_GA)
-    #GA_opt.fit(X_train, y_train)
+    GA_opt = OptimizationMLP_Classifier(GeneticAlgorithm, X_train.shape[1], error_calc="BCE" ,**params_GA)
+    GA_opt.fit(X_train, y_train)
     DE_opt = OptimizationMLP_Classifier(DifferentialEvolution, X_train.shape[1], weight_init="glorot" ,**params_DE)
     DE_opt.fit(X_train, y_train)
-    #print(GA_opt.score(X_train, y_train))
-    #print(GA_opt.score(X_test, y_test))
-    #print(GA_opt.history())
+    print(GA_opt.score(X_train, y_train))
+    print(GA_opt.score(X_test, y_test))
+    print(GA_opt.history())
     print(DE_opt.score(X_train, y_train))
     print(DE_opt.score(X_test, y_test))
     print(DE_opt.history())
