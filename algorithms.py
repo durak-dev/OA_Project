@@ -136,8 +136,9 @@ class GeneticAlgorithm():
         plt.title('Genetic Algorithm Performance')
         plt.xlabel('Iteration')
         plt.ylabel('Fitness')
+        plt.subplots_adjust(bottom=0.2)
         params = (f"Pop Size: {len(self.population)} | Iterations: {self.n_iter} | "
-                  f"Mutation Factor: {self.mutation_factor}")
+                  f"Mutation Factor: {self.mutation_rate}")
         plt.figtext(0.5, 0.05, params, ha="center", fontsize=10,
                     bbox={"facecolor": "lightblue", "alpha": 0.2, "pad": 5})
         plt.savefig('figures/GA_optimization_history.png')
@@ -145,7 +146,7 @@ class GeneticAlgorithm():
 
 class DifferentialEvolution():
     def __init__(self, generate_solution, fitness_function, crossover, mutation,
-                 pop_size, n_iter, crossover_rate=0.7, mutation_factor = 0.75, maximize=True):
+                 pop_size, n_iter, crossover_rate=0.7, mutation_factor = 0.5, maximize=True):
         self.population = [generate_solution() for _ in range(pop_size)]
         self.fitness_function = fitness_function
         self.pop_fitness = [self.fitness_function(dna) for dna in self.population]
@@ -175,12 +176,12 @@ class DifferentialEvolution():
                 mutant_child_fitness = self.fitness_function(mutant_child)
 
                 if self.maximize:
-                    mutant_better = mutant_child_fitness > individual_fitness
+                    mutant_better = mutant_child_fitness >= individual_fitness
                 else:
-                    mutant_better = mutant_child_fitness < individual_fitness
+                    mutant_better = mutant_child_fitness <= individual_fitness
 
                 if mutant_better:
-                    self.population[i] = mutant
+                    self.population[i] = mutant_child
                     self.pop_fitness[i] = mutant_child_fitness
 
             epoch -= 1

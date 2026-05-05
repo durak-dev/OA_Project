@@ -1,16 +1,8 @@
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import train_test_split
 from algorithm_functions import *
 from algorithms import GeneticAlgorithm, DifferentialEvolution
 
-park_data = pd.read_csv('parkinsons_preprocessed.csv', index_col=0)
-
-X = park_data.iloc[:, :-1]
-y = park_data.iloc[:, -1]
-
-
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=42)
 
 class OptimizationMLP_Classifier:
     def __init__(self, algorithm_class, hidden_layer_size, weight_init = 'gaussian', error_calc = 'BCE', **algo_params):
@@ -121,30 +113,20 @@ class OptimizationMLP_Classifier:
 
 
 if __name__ == "__main__":
+
     params_GA={'selection': tournament_selection,
                'crossover': alpha_crossover,
                'mutation': adaptive_mutation,
-               'pop_size': 100,
+               'pop_size': 50,
                'n_iter': 1000,
                'mutation_rate': 0.1,
                'maximize': False
                }
     params_DE={'crossover': binomial_crossover,
                'mutation': diff_evol_mutation,
-               'pop_size': 100,
-               'n_iter': 3000,
-               'mutation_factor': 1,
-               'crossover_rate': 0.9,
+               'pop_size': 50,
+               'n_iter': 1000,
+               'mutation_factor': 0.9,
+               'crossover_rate': 0.8,
                'maximize': False
                 }
-
-    GA_opt = OptimizationMLP_Classifier(GeneticAlgorithm, X_train.shape[1], error_calc="BCE" ,**params_GA)
-    GA_opt.fit(X_train, y_train)
-    DE_opt = OptimizationMLP_Classifier(DifferentialEvolution, X_train.shape[1], weight_init="glorot" ,**params_DE)
-    DE_opt.fit(X_train, y_train)
-    print(GA_opt.score(X_train, y_train))
-    print(GA_opt.score(X_test, y_test))
-    print(GA_opt.history())
-    print(DE_opt.score(X_train, y_train))
-    print(DE_opt.score(X_test, y_test))
-    print(DE_opt.history())

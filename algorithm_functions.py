@@ -75,6 +75,7 @@ def diff_evol_mutation(individual, population, scaling_rate):
     other2 = others[1]
     for index in range(len(individual)):
         mutated_dna = individual[index] + scaling_rate * (other1[index] - other2[index])
+        mutated_dna = np.clip(mutated_dna, -5, 5)
         mutant.append(mutated_dna)
     return mutant
 
