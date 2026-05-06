@@ -2,7 +2,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from algorithm_functions import *
 from algorithms import GeneticAlgorithm, DifferentialEvolution
-from utils import compare_algorithms
+from testing import compare_algorithms
 from FFO_MLP import OptimizationMLP_Classifier
 
 
@@ -17,17 +17,17 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random
 ga_params ={'selection': tournament_selection,
             'crossover': alpha_crossover,
             'mutation': adaptive_mutation,
-            'pop_size': 50,
+            'pop_size': 100,
             'n_iter': 1000,
             'mutation_rate': 0.1,
             'maximize': False}
 
 de_params ={'mutation': diff_evol_mutation,
             'crossover': binomial_crossover,
-            'pop_size': 50,
+            'pop_size': 100,
             'n_iter': 1000,
-            'mutation_factor': 0.6,
-            'crossover_rate': 0.8,
+            'mutation_factor': 0.8,
+            'crossover_rate': 0.9,
             'maximize': False}
 
 configs = [
@@ -35,18 +35,18 @@ configs = [
         {'class': DifferentialEvolution, 'params': de_params, 'name': 'Differential Evolution'}
     ]
 
-    # Run comparison
+# Run comparison
 
 
-GA_opt = OptimizationMLP_Classifier(GeneticAlgorithm, X_train.shape[1], error_calc="BCE" ,**ga_params)
+"""GA_opt = OptimizationMLP_Classifier(GeneticAlgorithm, X_train.shape[1], error_calc="BCE" ,**ga_params)
 GA_opt.fit(X_train, y_train)
 print(GA_opt.score(X_train, y_train))
 print(GA_opt.score(X_test, y_test))
-print(GA_opt.history())
+GA_opt.history()
 DE_opt = OptimizationMLP_Classifier(DifferentialEvolution, X_train.shape[1], weight_init="glorot" , **de_params)
 DE_opt.fit(X_train, y_train)
 print(DE_opt.score(X_train, y_train))
 print(DE_opt.score(X_test, y_test))
-print(DE_opt.history())
-compare_algorithms(X_train, y_train, configs, n_repeats=2)
+DE_opt.history()"""
+compare_algorithms(X_train, y_train, X_test, y_test, configs, n_repeats=30)
 
