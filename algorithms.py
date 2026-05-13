@@ -217,6 +217,95 @@ class DifferentialEvolution():
         plt.show()
 
 
+class ParticleSwarm():
+    def __init__(self, generate_solution, fitness_function, pop_size, n_iter, 
+                 w=0.7, c1=1.5, c2=1.5, maximize=True, v_max=0.1, w_limit=3.0):
+        self.generate_solution = generate_solution
+        self.fitness_function = fitness_function
+        self.pop_size = pop_size
+        self.n_iter = n_iter
+        self.w = w  
+        self.c1 = c1  
+        self.c2 = c2  
+        self.maximize = maximize
+        
+        # Hyperparameters for overfitting prevention
+        self.v_max = v_max  # Prevents massive jumps in weight space
+        self.w_limit = w_limit # Prevents weights from growing too large
+
+        # Initialize particles
+        self.positions = [generate_solution() for _ in range(pop_size)]
+        self.velocities = [self.init_velocity(pos) for pos in self.positions]
+        self.pbest = [[arr.copy() for arr in pos] for pos in self.positions]
+        self.pbest_fitness = [self.fitness_function(pos) for pos in self.positions]
+        
+        if self.maximize:
+            best_idx = np.argmax(self.pbest_fitness)
+        else:
+            best_idx = np.argmin(self.pbest_fitness)
+            
+        self.gbest = [arr.copy() for arr in self.positions[best_idx]]
+        self.gbest_fitness = self.pbest_fitness[best_idx]
+        self.history = []
+
+    def init_velocity(self, pos):
+        vel = []
+        for p in pos:
+            vel.append(np.random.uniform(-self.v_max, self.v_max, p.shape))
+        return vel
+
+    def update_velocity(self, vel, pos, pbest, gbest):
+        new_vel = []
+        for i in range(len(vel)):
+            r1 = np.random.rand(*vel[i].shape)
+            r2 = np.random.rand(*vel[i].shape)
+            cognitive = self.c1 * r1 * (pbest[i] - pos[i])
+            social = self.c2 * r2 * (gbest[i] - pos[i])
+            
+            # Apply velocity update with Clamping
+            v = self.w * vel[i] + cognitive + social
+            new_vel.append(np.clip(v, -self.v_max, self.v_max))
+        return new_vel
+
+    def update_position(self, pos, vel):
+        new_pos = []
+        for i in range(len(pos)):
+            # Update position and apply Weight Clipping
+            updated_p = pos[i] + vel[i]
+            new_pos.append(np.clip(updated_p, -self.w_limit, self.w_limit))
+        return new_pos
+
+    def run(self):
+        for _ in range(self.n_iter):
+            for i in range(self.pop_size):
+                # 1. Update velocity with clamping
+                self.velocities[i] = self.update_velocity(
+                    self.velocities[i], self.positions[i], self.pbest[i], self.gbest
+                )
+                
+                # 2. Update position with weight clipping
+                self.positions[i] = self.update_position(self.positions[i], self.velocities[i])
+                
+                # 3. Evaluate fitness
+                fitness = self.fitness_function(self.positions[i])
+                
+                # 4. Update personal best
+                update_pbest = (self.maximize and fitness > self.pbest_fitness[i]) or \
+                               (not self.maximize and fitness < self.pbest_fitness[i])
+                
+                if update_pbest:
+                    self.pbest[i] = [arr.copy() for arr in self.positions[i]]
+                    self.pbest_fitness[i] = fitness
+                    
+                    # 5. Update global best
+                    update_gbest = (self.maximize and fitness > self.gbest_fitness) or \
+                                   (not self.maximize and fitness < self.gbest_fitness)
+                    if update_gbest:
+                        self.gbest = [arr.copy() for arr in self.positions[i]]
+                        self.gbest_fitness = fitness
+                        
+            self.history.append(self.gbest_fitness)
+        return self.gbest, self.gbest_fitness
 
 
 if __name__ == "__main__":

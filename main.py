@@ -1,8 +1,9 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from algorithm_functions import *
-from algorithms import GeneticAlgorithm, DifferentialEvolution
-from testing import compare_algorithms
+from algorithms import GeneticAlgorithm, DifferentialEvolution, ParticleSwarm
+from pararllel_testing import compare_algorithms
+# from testing import compare_algorithms     # Switch to parallel if something goes wrong with the non-parallel version
 from FFO_MLP import OptimizationMLP_Classifier
 
 
@@ -30,9 +31,19 @@ de_params ={'mutation': diff_evol_mutation,
             'crossover_rate': 0.9,
             'maximize': False}
 
+pso_params = {'pop_size': 40,        
+            'n_iter': 250,         
+            'w': 0.6,              
+            'c1': 1.4,             
+            'c2': 1.4,             
+            'v_max': 0.05,         
+            'w_limit': 1.5,        
+            'maximize': False}
+
 configs = [
         {'class': GeneticAlgorithm, 'params': ga_params, 'name': 'Genetic Algorithm'},
-        {'class': DifferentialEvolution, 'params': de_params, 'name': 'Differential Evolution'}
+        {'class': DifferentialEvolution, 'params': de_params, 'name': 'Differential Evolution'},
+        {'class': ParticleSwarm, 'params': pso_params, 'name': 'Particle Swarm'}
     ]
 
 # Run comparison
