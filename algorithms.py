@@ -216,7 +216,6 @@ class DifferentialEvolution():
         plt.savefig('figures/DE_optimization_history.png')
         plt.show()
 
-
 class ParticleSwarm():
     def __init__(self, generate_solution, fitness_function, pop_size, n_iter, 
                  w=0.7, c1=1.5, c2=1.5, maximize=True, v_max=0.1, w_limit=3.0):

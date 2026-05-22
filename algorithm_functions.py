@@ -69,14 +69,25 @@ def adaptive_mutation(child, mutation_rate):
     return child
 
 def diff_evol_mutation(individual, population, scaling_rate):
+    pop_size = len(population)
+
+    idx_list = []
+    while len(idx_list) < 2:
+        r = rd.randint(0, pop_size - 1)
+        candidate = population[r]
+        if candidate is not individual and r not in idx_list:
+            idx_list.append(r)
+
+    other1 = population[idx_list[0]]
+    other2 = population[idx_list[1]]
+
     mutant = []
-    others = rd.sample(population, 2)
-    other1 = others[0]
-    other2 = others[1]
     for index in range(len(individual)):
         mutated_dna = individual[index] + scaling_rate * (other1[index] - other2[index])
+        # Clipping is vital for Neural Network stability
         mutated_dna = np.clip(mutated_dna, -5, 5)
         mutant.append(mutated_dna)
+
     return mutant
 
 
