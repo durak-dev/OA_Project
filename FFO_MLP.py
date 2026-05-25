@@ -1,22 +1,24 @@
 import numpy as np
 import pandas as pd
 from algorithm_functions import *
-from algorithms import GeneticAlgorithm, DifferentialEvolution
 
 
 class OptimizationMLP_Classifier:
-    def __init__(self, algorithm_class, hidden_layer_size, weight_init = 'gaussian', error_calc = 'BCE', **algo_params):
+    def __init__(self, algorithm_class, hidden_layer_size, weight_init='gaussian', error_calc='BCE', random_state=None,
+                 **algo_params):
         """
         algorithm_class: The UNINSTANTIATED class (e.g., GeneticAlgorithm)
         algo_params: A dictionary of hyperparameters (e.g., {'pop_size': 50})
         hidden_layer_size: The number of neurons in the hidden layer
         """
         self.algorithm_class = algorithm_class
-        self.algo_params = algo_params
         self.hidden_layer_size = hidden_layer_size
         self.weight_init = weight_init
         self.error_calc = error_calc
         self.model_weights = None
+        self.rng = np.random.default_rng(random_state)
+        self.algo_params = algo_params
+        self.algo_params['random_state'] = self.rng
 
     def _forward(self, X, weights):
         """Internal forward pass logic."""
@@ -34,10 +36,8 @@ class OptimizationMLP_Classifier:
         y_reshaped = np.array(y).reshape(-1, 1)
         if self.error_calc == 'BCE':
             preds = np.clip(self.sigmoid(logits), 1e-15, 1 - 1e-15)
-            # BCE Formula: -[y*log(p) + (1-y)*log(1-p)]
             loss = - (y_reshaped * np.log(preds) + (1 - y_reshaped) * np.log(1 - preds))
         else:
-            # Using MSE as fitness (Optimization algorithms usually minimize error)
             loss = (logits - y_reshaped) ** 2
         return np.mean(loss)
 
@@ -46,9 +46,9 @@ class OptimizationMLP_Classifier:
         n_features = X.shape[1]
         n_outputs = y.shape[1] if len(y.shape) > 1 else 1
         return [
-            np.random.randn(n_features, self.hidden_layer_size) * 0.1,
+            self.rng.standard_normal((n_features, self.hidden_layer_size)) * 0.1,
             np.zeros(self.hidden_layer_size),
-            np.random.randn(self.hidden_layer_size, n_outputs) * 0.1,
+            self.rng.standard_normal((self.hidden_layer_size, n_outputs)) * 0.1,
             np.zeros(n_outputs)
         ]
 
@@ -57,36 +57,31 @@ class OptimizationMLP_Classifier:
         n_features = X.shape[1]
         n_outputs = y.shape[1] if len(y.shape) > 1 else 1
         n_hidden = self.hidden_layer_size
-        # Formula: std = sqrt(2 / (fan_in + fan_out))
-        # Layer 1: Input to Hidden
         std1 = np.sqrt(2 / (n_features + n_hidden))
-        # Layer 2: Hidden to Output
         std2 = np.sqrt(2 / (n_hidden + n_outputs))
 
         return [
-            np.random.normal(0, std1, (n_features, n_hidden)),
+            self.rng.normal(0, std1, (n_features, n_hidden)),
             np.zeros(n_hidden),
-            np.random.normal(0, std2, (n_hidden, n_outputs)),
+            self.rng.normal(0, std2, (n_hidden, n_outputs)),
             np.zeros(n_outputs)
         ]
 
     def fit(self, X_train, y_train):
         """fitting the MLP model."""
-        # The 'Insular' Bridge: Wrap logic into single-argument callables
         initializer = lambda: (self._init_weights_gaussian(X_train, y_train)
                                if self.weight_init == 'gaussian'
                                else self._init_weights_xavier(X_train, y_train))
         evaluator = lambda w: self._fitness_wrapper(w, X_train, y_train)
 
-        # Plug-and-play instantiation
+
         self.optimizer = self.algorithm_class(
             generate_solution=initializer,
             fitness_function=evaluator,
             **self.algo_params
         )
 
-        # Execute whatever algorithm was passed
-        self.model_weights,  _ = self.optimizer.run()
+        self.model_weights, _ = self.optimizer.run()
         return self
 
     def predict_proba(self, X_test):
@@ -97,7 +92,6 @@ class OptimizationMLP_Classifier:
     def predict(self, X_test):
         """predict the labels for X."""
         logits = self._forward(X_test, self.model_weights)
-        # Threshold raw output at 0
         return (logits > 0).astype(int).flatten()
 
     def score(self, X, y):
@@ -110,7 +104,6 @@ class OptimizationMLP_Classifier:
             return self.optimizer.plot_history()
         else:
             raise ValueError("You must call .fit() before accessing history.")
-
 
 if __name__ == "__main__":
 

@@ -78,9 +78,12 @@ class SimulatedAnnealing():
         plt.plot(self.history_fit)
         plt.show()
 
+
 class GeneticAlgorithm():
     def __init__(self, generate_solution, fitness_function, selection, crossover, mutation,
-                 pop_size, n_iter, tournament_size = 3, mutation_rate = 0.05, maximize=True, elitism=False):
+                 pop_size, n_iter, tournament_size=3, mutation_rate=0.05, maximize=True, elitism=False,
+                 random_state=None):
+        self.rng = np.random.default_rng(random_state)
         self.population = [generate_solution() for _ in range(pop_size)]
         self.fitness_function = fitness_function
         self.pop_fitness = [self.fitness_function(dna) for dna in self.population]
@@ -93,6 +96,7 @@ class GeneticAlgorithm():
         self.maximize = maximize
         self.elitism = elitism
         self.history = []
+
     def run(self):
         epoch = self.n_iter
         if self.maximize:
@@ -101,20 +105,26 @@ class GeneticAlgorithm():
         else:
             best_sol = self.population[np.argmin(self.pop_fitness)]
             best_sol_fitness = self.pop_fitness[np.argmin(self.pop_fitness)]
+
         while epoch > 0:
             nxt_pop_dna = []
             best_from_prev = best_sol
             while len(nxt_pop_dna) < len(self.population):
-                parent1 = self.selection(self.population, self.pop_fitness, tournament_size = self.tournament_size, maximize=self.maximize)
-                parent2 = self.selection(self.population, self.pop_fitness, tournament_size = self.tournament_size, maximize=self.maximize)
-                child1, child2 = self.crossover(parent1, parent2)
-                nxt_pop_dna.append(self.mutation(child1, self.mutation_rate))
-                nxt_pop_dna.append(self.mutation(child2, self.mutation_rate))
+                parent1 = self.selection(self.population, self.pop_fitness, tournament_size=self.tournament_size,
+                                         maximize=self.maximize, rng=self.rng)
+                parent2 = self.selection(self.population, self.pop_fitness, tournament_size=self.tournament_size,
+                                         maximize=self.maximize, rng=self.rng)
+                child1, child2 = self.crossover(parent1, parent2, rng=self.rng)
+                nxt_pop_dna.append(self.mutation(child1, self.mutation_rate, rng=self.rng))
+                nxt_pop_dna.append(self.mutation(child2, self.mutation_rate, rng=self.rng))
+
             if self.elitism:
-                nxt_pop_dna[np.random.randint(0,len(self.population))] = best_from_prev
+                nxt_pop_dna[self.rng.integers(0, len(self.population))] = best_from_prev
+
             self.population = nxt_pop_dna
             self.pop_fitness = [self.fitness_function(kid) for kid in self.population]
             epoch -= 1
+
             if self.maximize:
                 index_best_fit = np.argmax(self.pop_fitness)
                 new_sol_fit = self.pop_fitness[index_best_fit]
@@ -144,9 +154,14 @@ class GeneticAlgorithm():
         plt.savefig('figures/GA_optimization_history.png')
         plt.show()
 
+
 class DifferentialEvolution():
     def __init__(self, generate_solution, fitness_function, crossover, mutation,
-                 pop_size, n_iter, crossover_rate=0.7, mutation_factor = 0.5, maximize=True):
+                 pop_size, n_iter, crossover_rate=0.7, mutation_factor=0.5, maximize=True, random_state=None):
+
+        # NEW: Initialize the random generator
+        self.rng = np.random.default_rng(random_state)
+
         self.population = [generate_solution() for _ in range(pop_size)]
         self.fitness_function = fitness_function
         self.pop_fitness = [self.fitness_function(dna) for dna in self.population]
@@ -166,13 +181,15 @@ class DifferentialEvolution():
         else:
             best_sol = self.population[np.argmin(self.pop_fitness)]
             best_sol_fitness = self.pop_fitness[np.argmin(self.pop_fitness)]
-        while epoch > 0:
 
+        while epoch > 0:
             for i in range(len(self.population)):
                 individual = self.population[i]
                 individual_fitness = self.pop_fitness[i]
-                mutant = self.mutation(individual, self.population, self.mutation_factor)
-                mutant_child = self.crossover(individual, mutant, self.crossover_rate)
+
+                # NEW: Passed rng=self.rng to external mutation and crossover functions
+                mutant = self.mutation(individual, self.population, self.mutation_factor, rng=self.rng)
+                mutant_child = self.crossover(individual, mutant, self.crossover_rate, rng=self.rng)
                 mutant_child_fitness = self.fitness_function(mutant_child)
 
                 if self.maximize:
@@ -208,7 +225,6 @@ class DifferentialEvolution():
         plt.xlabel('Iteration')
         plt.ylabel('Fitness')
         plt.subplots_adjust(bottom=0.2)
-        # Hyperparameters
         params = (f"Pop Size: {len(self.population)} | Iterations: {self.n_iter} | "
                   f"Mutation Factor: {self.mutation_factor}")
         plt.figtext(0.5, 0.05, params, ha="center", fontsize=10,
@@ -216,33 +232,35 @@ class DifferentialEvolution():
         plt.savefig('figures/DE_optimization_history.png')
         plt.show()
 
+
 class ParticleSwarm():
-    def __init__(self, generate_solution, fitness_function, pop_size, n_iter, 
-                 w=0.7, c1=1.5, c2=1.5, maximize=True, v_max=0.1, w_limit=3.0):
+    def __init__(self, generate_solution, fitness_function, pop_size, n_iter,
+                 w=0.7, c1=1.5, c2=1.5, maximize=True, v_max=0.1, w_limit=3.0, random_state=None):
+
+        self.rng = np.random.default_rng(random_state)
+
         self.generate_solution = generate_solution
         self.fitness_function = fitness_function
         self.pop_size = pop_size
         self.n_iter = n_iter
-        self.w = w  
-        self.c1 = c1  
-        self.c2 = c2  
+        self.w = w
+        self.c1 = c1
+        self.c2 = c2
         self.maximize = maximize
-        
-        # Hyperparameters for overfitting prevention
-        self.v_max = v_max  # Prevents massive jumps in weight space
-        self.w_limit = w_limit # Prevents weights from growing too large
 
-        # Initialize particles
+        self.v_max = v_max
+        self.w_limit = w_limit
+
         self.positions = [generate_solution() for _ in range(pop_size)]
         self.velocities = [self.init_velocity(pos) for pos in self.positions]
         self.pbest = [[arr.copy() for arr in pos] for pos in self.positions]
         self.pbest_fitness = [self.fitness_function(pos) for pos in self.positions]
-        
+
         if self.maximize:
             best_idx = np.argmax(self.pbest_fitness)
         else:
             best_idx = np.argmin(self.pbest_fitness)
-            
+
         self.gbest = [arr.copy() for arr in self.positions[best_idx]]
         self.gbest_fitness = self.pbest_fitness[best_idx]
         self.history = []
@@ -250,18 +268,17 @@ class ParticleSwarm():
     def init_velocity(self, pos):
         vel = []
         for p in pos:
-            vel.append(np.random.uniform(-self.v_max, self.v_max, p.shape))
+            vel.append(self.rng.uniform(-self.v_max, self.v_max, p.shape))
         return vel
 
     def update_velocity(self, vel, pos, pbest, gbest):
         new_vel = []
         for i in range(len(vel)):
-            r1 = np.random.rand(*vel[i].shape)
-            r2 = np.random.rand(*vel[i].shape)
+            r1 = self.rng.random(vel[i].shape)
+            r2 = self.rng.random(vel[i].shape)
             cognitive = self.c1 * r1 * (pbest[i] - pos[i])
             social = self.c2 * r2 * (gbest[i] - pos[i])
-            
-            # Apply velocity update with Clamping
+
             v = self.w * vel[i] + cognitive + social
             new_vel.append(np.clip(v, -self.v_max, self.v_max))
         return new_vel
@@ -269,7 +286,6 @@ class ParticleSwarm():
     def update_position(self, pos, vel):
         new_pos = []
         for i in range(len(pos)):
-            # Update position and apply Weight Clipping
             updated_p = pos[i] + vel[i]
             new_pos.append(np.clip(updated_p, -self.w_limit, self.w_limit))
         return new_pos
@@ -277,32 +293,27 @@ class ParticleSwarm():
     def run(self):
         for _ in range(self.n_iter):
             for i in range(self.pop_size):
-                # 1. Update velocity with clamping
                 self.velocities[i] = self.update_velocity(
                     self.velocities[i], self.positions[i], self.pbest[i], self.gbest
                 )
-                
-                # 2. Update position with weight clipping
+
                 self.positions[i] = self.update_position(self.positions[i], self.velocities[i])
-                
-                # 3. Evaluate fitness
+
                 fitness = self.fitness_function(self.positions[i])
-                
-                # 4. Update personal best
+
                 update_pbest = (self.maximize and fitness > self.pbest_fitness[i]) or \
                                (not self.maximize and fitness < self.pbest_fitness[i])
-                
+
                 if update_pbest:
                     self.pbest[i] = [arr.copy() for arr in self.positions[i]]
                     self.pbest_fitness[i] = fitness
-                    
-                    # 5. Update global best
+
                     update_gbest = (self.maximize and fitness > self.gbest_fitness) or \
                                    (not self.maximize and fitness < self.gbest_fitness)
                     if update_gbest:
                         self.gbest = [arr.copy() for arr in self.positions[i]]
                         self.gbest_fitness = fitness
-                        
+
             self.history.append(self.gbest_fitness)
         return self.gbest, self.gbest_fitness
 

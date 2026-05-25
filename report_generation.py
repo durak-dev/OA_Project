@@ -88,7 +88,7 @@ def compile_saved_results_to_pdf(data_path, figures_dir, configs, output_pdf="fi
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),  # Changed to MIDDLE for a cleaner look if text wraps
         ('BOTTOMPADDING', (0, 0), (-1, -1), 4),  # Tightened padding to save vertical space
         ('TOPPADDING', (0, 0), (-1, -1), 4),  # Tightened padding
-        ('LEFTPADDING', (1, 1), (1, -1), 6),  # Ensures parameters start close to the line
+        ('LEFTPADDING', (1,  1), (1, -1), 6),  # Ensures parameters start close to the line
         ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f8fafc')])
     ]))
     story.append(param_table)

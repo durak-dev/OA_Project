@@ -1,20 +1,27 @@
 import numpy as np
 import random as rd
 
-def alpha_crossover(parent1, parent2):
+
+
+def alpha_crossover(parent1, parent2, rng=None):
+    # NEW: Fallback if no generator is passed
+    rng = rng if rng is not None else np.random.default_rng()
+
     child1 = []
     child2 = []
     for index in range(len(parent1)):
-        alpha = np.random.rand()
-        child1.append((1-alpha)*parent1[index] + alpha*parent2[index])
-        child2.append((1-alpha)*parent2[index] + alpha*parent1[index])
+        alpha = rng.random()
+        child1.append((1 - alpha) * parent1[index] + alpha * parent2[index])
+        child2.append((1 - alpha) * parent2[index] + alpha * parent1[index])
     return child1, child2
 
-def swap_crossover(parent1, parent2):
+
+def swap_crossover(parent1, parent2, rng=None):
+    rng = rng if rng is not None else np.random.default_rng()
     child1 = []
     child2 = []
     for index in range(len(parent1)):
-        if np.random.rand() < 0.5:
+        if rng.random() < 0.5:
             child1.append(parent1[index])
             child2.append(parent2[index])
         else:
@@ -22,17 +29,22 @@ def swap_crossover(parent1, parent2):
             child2.append(parent1[index])
     return child1, child2
 
-def binomial_crossover(individual, mutant, cr):
+
+def binomial_crossover(individual, mutant, cr, rng=None):
+    rng = rng if rng is not None else np.random.default_rng()
     mutant_child = []
     for i in range(len(individual)):
-        if np.random.rand() < cr:
+        if rng.random() < cr:
             mutant_child.append(mutant[i])
         else:
             mutant_child.append(individual[i])
     return mutant_child
 
-def tournament_selection(population, fitnesses, tournament_size, maximize):
-    sample_indices = np.random.choice([i for i in range(len(population))], size=tournament_size, replace=False)
+
+def tournament_selection(population, fitnesses, tournament_size, maximize, rng=None):
+    rng = rng if rng is not None else np.random.default_rng()
+    sample_indices = rng.choice(len(population), size=tournament_size, replace=False)
+
     tournament = [population[i] for i in sample_indices]
     fit_tournament = [fitnesses[i] for i in sample_indices]
     if maximize:
@@ -40,40 +52,43 @@ def tournament_selection(population, fitnesses, tournament_size, maximize):
     else:
         return tournament[np.argmin(fit_tournament)]
 
-def individual_mutation(child, mutation_rate):
+
+def individual_mutation(child, mutation_rate, rng=None):
+    rng = rng if rng is not None else np.random.default_rng()
     for i in range(0, len(child), 2):
         for j in range(len(child[i])):
-            if mutation_rate > np.random.rand():
-                child[i][j] *= np.random.randn()
+            if mutation_rate > rng.random():
+                child[i][j] *= rng.standard_normal()
 
-def adaptive_mutation(child, mutation_rate):
+
+def adaptive_mutation(child, mutation_rate, rng=None):
     """
     Mutates weights with a strength scaled by the layer dimensions
     (using Glorot-style logic).
     """
+    rng = rng if rng is not None else np.random.default_rng()
     for i in range(0, len(child), 2):
         weights = child[i]
         bias = child[i + 1]
         fan_in, fan_out = weights.shape
-        # Xavier/Glorot scaling factor
-        # This keeps the variance of the 'nudge' proportional to layer size
         xavier_scale = np.sqrt(2 / (fan_in + fan_out))
-        # Calculate dynamic strength
         dynamic_strength = 0.1 * xavier_scale
-        # Perform mutation
-        mask_w = np.random.rand(*weights.shape) < mutation_rate
-        mask_b = np.random.rand(*bias.shape) < mutation_rate
-        child[i] += mask_w * np.random.normal(0, dynamic_strength, weights.shape)
-        child[i + 1] += mask_b * np.random.normal(0, dynamic_strength, bias.shape)
+
+        mask_w = rng.random(weights.shape) < mutation_rate
+        mask_b = rng.random(bias.shape) < mutation_rate
+        child[i] += mask_w * rng.normal(0, dynamic_strength, weights.shape)
+        child[i + 1] += mask_b * rng.normal(0, dynamic_strength, bias.shape)
 
     return child
 
-def diff_evol_mutation(individual, population, scaling_rate):
+
+def diff_evol_mutation(individual, population, scaling_rate, rng=None):
+    rng = rng if rng is not None else np.random.default_rng()
     pop_size = len(population)
 
     idx_list = []
     while len(idx_list) < 2:
-        r = rd.randint(0, pop_size - 1)
+        r = rng.integers(0, pop_size)
         candidate = population[r]
         if candidate is not individual and r not in idx_list:
             idx_list.append(r)
@@ -84,10 +99,7 @@ def diff_evol_mutation(individual, population, scaling_rate):
     mutant = []
     for index in range(len(individual)):
         mutated_dna = individual[index] + scaling_rate * (other1[index] - other2[index])
-        # Clipping is vital for Neural Network stability
         mutated_dna = np.clip(mutated_dna, -5, 5)
         mutant.append(mutated_dna)
 
     return mutant
-
-

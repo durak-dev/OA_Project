@@ -86,7 +86,7 @@ def compare_algorithms_serial(X_train, y_train, X_test, y_test, configs, n_repea
 
 def _run_single_experiment(config, X_train, y_train, X_test, y_test):
     """Helper function to perform a single optimization run."""
-    mlp = OptimizationMLP_Classifier(config['class'], 10, **config['params'])
+    mlp = OptimizationMLP_Classifier(config['class'], 10, weight_init='glorot', error_calc='BCE', **config['params'])
     mlp.fit(X_train, y_train)
 
     # Prepare history data
