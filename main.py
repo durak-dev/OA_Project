@@ -77,7 +77,7 @@ DE_opt.history()
 DE_opt_alt = OptimizationMLP_Classifier(DifferentialEvolution, hidden_layer_size=10, weight_init="glorot",error_calc="BCE", random_state=69, **de_params_alt)
 DE_opt_alt.fit(X_train_scaled, y_train)
 DE_opt_alt.history()
-x
+
 print('training:', DE_opt.score(X_train_scaled, y_train))
 print('testing:', DE_opt.score(X_test_scaled, y_test))
 PSO = OptimizationMLP_Classifier(ParticleSwarm, X_train_scaled.shape[1], **pso_params)

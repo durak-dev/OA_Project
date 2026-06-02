@@ -4,7 +4,6 @@ import random as rd
 
 
 def alpha_crossover(parent1, parent2, rng=None):
-    # NEW: Fallback if no generator is passed
     rng = rng if rng is not None else np.random.default_rng()
 
     child1 = []
@@ -59,7 +58,7 @@ def individual_mutation(child, mutation_rate, rng=None):
         for j in range(len(child[i])):
             if mutation_rate > rng.random():
                 child[i][j] *= rng.standard_normal()
-
+    return child
 
 def adaptive_mutation(child, mutation_rate, rng=None):
     """
