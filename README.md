@@ -9,7 +9,7 @@ This repository implements machine learning and optimization algorithms to analy
 ```
 OA_Project/
 ├── main.py                     # Project entry point orchestrating execution
-├── FFO_MLP.py                  # Fruit Fly Optimization coupled with Multilayer Perceptron
+├── FFO_MLP.py                  # Feed Forward Operations of the Multilayer Perceptron
 ├── algorithms.py               # Core metaheuristic/optimization algorithms
 ├── algorithm_functions.py      # Fitness functions and cost evaluations
 ├── report_generation.py        # Automated reporting and visualization utilities
